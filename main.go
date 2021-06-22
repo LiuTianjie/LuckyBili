@@ -58,8 +58,11 @@ func main() {
 	result, _ := ioutil.ReadAll(response.Body)
 	var res newestComment
 	err = json.Unmarshal(result, &res)
-	luckyList := cjManyTimes("135459278", res.Data.Cursor.Prev, 120)
-	log.Println("中奖列表为：", luckyList)
+	luckyList := cjManyTimes("135459278", res.Data.Cursor.Prev, 20)
+	log.Println("中奖列表为：")
+	for _,l:=range luckyList{
+		log.Println(l)
+	}
 	defer func(Body io.ReadCloser) {
 		err = Body.Close()
 		if err != nil {
