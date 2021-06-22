@@ -1,6 +1,7 @@
 package main
 
 import (
+	cj "awesomecj/src/cj-core"
 	"encoding/json"
 	"io/ioutil"
 	"log"
@@ -18,12 +19,12 @@ func BenchmarkCjManyTimes(b *testing.B) {
 	} else {
 		request.Header.Add("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (HTML, like Gecko) Chrome/91.0.4472.106 Safari/537.36")
 	}
-	response, _ := client.Do(request)
+	response, _ := cj.Client.Do(request)
 	result, _ := ioutil.ReadAll(response.Body)
-	var res newestComment
+	var res cj.NewestComment
 	err = json.Unmarshal(result, &res)
 	b.ResetTimer()
-	cjManyTimes("135459278", res.Data.Cursor.Prev, 50)
+	cj.CjManyTimesByFixWorker("135459278", res.Data.Cursor.Prev, 50, false, "")
 }
 
 func BenchmarkCj(b *testing.B) {
@@ -34,11 +35,11 @@ func BenchmarkCj(b *testing.B) {
 	} else {
 		request.Header.Add("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (HTML, like Gecko) Chrome/91.0.4472.106 Safari/537.36")
 	}
-	response, _ := client.Do(request)
+	response, _ := cj.Client.Do(request)
 	result, _ := ioutil.ReadAll(response.Body)
-	var res newestComment
+	var res cj.NewestComment
 	err = json.Unmarshal(result, &res)
 	n := rand.Intn(res.Data.Cursor.Prev)
 	b.ResetTimer()
-	cj("135459278", strconv.Itoa(n))
+	cj.Cj("135459278", strconv.Itoa(n), false, "")
 }
