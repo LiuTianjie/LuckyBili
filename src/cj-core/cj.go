@@ -13,52 +13,21 @@ import (
 	"time"
 )
 
-var Client http.Client
-
-type NewestComment struct {
-	Data commentData `json:"data"`
-}
-
-type commentData struct {
-	Cursor  cursor  `json:"cursor"`
-	Replies []reply `json:"replies"`
-}
-
-type cursor struct {
-	AllCount int `json:"all_count"`
-	Prev     int `json:"prev"`
-	Next     int `json:"next"`
-}
-
-type reply struct {
-	Floor   int     `json:"floor"`
-	Member  member  `json:"member"`
-	Content content `json:"content"`
-}
-type member struct {
-	Mid    string `json:"mid"`
-	Uname  string `json:"uname"`
-	Avatar string `json:"avatar"`
-}
-
-type content struct {
-	Message string `json:"message"`
-}
-
 // Cj Core random process.
 func Cj(oid string, page string, fliter bool, condition string) (luckyOne reply) {
 	rand.Seed(time.Now().Unix())
-	req, err := http.NewRequest("GET", "", nil)
-	if err != nil {
-		log.Println(err)
-	}
+	// Req request, only need to change the header.
+	req, _ := http.NewRequest("GET", "", nil)
 	req.Header.Add("User-Agent", "Mozilla/4.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.106 Safari/537.36")
 	url := "https://api.bilibili.com/x/v2/reply/main?&next=" + page + "&type=11&oid=" + oid + "&mode=2&plat=1&_=1624272531135"
 	req.URL, _ = urlpkg.Parse(url)
 	response, _ := Client.Do(req)
 	res, _ := ioutil.ReadAll(response.Body)
 	var ChosenPage NewestComment
-	err = json.Unmarshal(res, &ChosenPage)
+	if err := json.Unmarshal(res, &ChosenPage); err != nil {
+		log.Println("JSON解码错误")
+		return
+	}
 	// Without condition, we just need to randomly chose one.
 	if !fliter {
 		luckyPoint := rand.Intn(len(ChosenPage.Data.Replies))
@@ -84,7 +53,7 @@ func Cj(oid string, page string, fliter bool, condition string) (luckyOne reply)
 
 // CjManyTimesByFixWorker Use 10 workers to request, each worker is sync.
 // 6.22 test, max number can be 300.
-func CjManyTimesByFixWorker(oid string, rg int, num int, fliter bool, condition string) (luckyList []reply) {
+func CjManyTimesByFixWorker(oid string, rg int, num int, filter bool, condition string) {
 	var wgList sync.WaitGroup = sync.WaitGroup{}
 	wgList.Add(10)
 	// Allocate jobs.
@@ -96,7 +65,7 @@ func CjManyTimesByFixWorker(oid string, rg int, num int, fliter bool, condition 
 		if i < 9 {
 			go func() {
 				for j := 0; j < avgTaskNum; j++ {
-					singleTime(&exist, &muList, rg, oid, &luckyList, fliter, condition)
+					singleTime(&exist, &muList, rg, oid, filter, condition)
 				}
 				wgList.Done()
 			}()
@@ -104,7 +73,7 @@ func CjManyTimesByFixWorker(oid string, rg int, num int, fliter bool, condition 
 		if i == 9 {
 			go func() {
 				for k := 0; k < last+avgTaskNum; k++ {
-					singleTime(&exist, &muList, rg, oid, &luckyList, fliter, condition)
+					singleTime(&exist, &muList, rg, oid, filter, condition)
 				}
 				wgList.Done()
 			}()
@@ -117,15 +86,15 @@ func CjManyTimesByFixWorker(oid string, rg int, num int, fliter bool, condition 
 }
 
 // Single Time write the sync map and array.
-func singleTime(exist *sync.Map, muList *sync.Mutex, rg int, oid string, luckyList *[]reply, fliter bool, condition string) {
+func singleTime(exist *sync.Map, muList *sync.Mutex, rg int, oid string, filter bool, condition string) {
 	count := 0
 	for {
 		n := rand.Intn(rg)
 		_, ok := exist.Load(n)
 		if !ok {
 			exist.Store(n, true)
-			luckyPerson := Cj(oid, strconv.Itoa(n), fliter, condition)
-			if fliter {
+			luckyPerson := Cj(oid, strconv.Itoa(n), filter, condition)
+			if filter {
 				if luckyPerson.Member.Mid == "" {
 					count += 1
 					// Count is the max retry times.
@@ -137,7 +106,7 @@ func singleTime(exist *sync.Map, muList *sync.Mutex, rg int, oid string, luckyLi
 				}
 			}
 			muList.Lock()
-			*luckyList = append(*luckyList, luckyPerson)
+			LuckyList = append(LuckyList, luckyPerson)
 			muList.Unlock()
 			break
 		}

@@ -7,4 +7,5 @@ A bilibili lottery tool written by golang.
 - [ ] Use redis to limit frequency.
 - [ ] Proxy pool.
 - [ ] Sub and pub to notify the lottery date.
+- [ ] Record every time.
 - [ ] Etc.

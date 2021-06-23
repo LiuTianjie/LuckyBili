@@ -22,14 +22,17 @@ func main() {
 	var res cj.NewestComment
 	err = json.Unmarshal(result, &res)
 	// With out condition.
-	//luckyList := cj.CjManyTimesByFixWorker("135459278", res.Data.Cursor.Prev, 5,false,"")
-	//log.Println("总人数：",len(luckyList))
-	//log.Println("中奖列表",luckyList)
+	//cj.CjManyTimesByFixWorker("135459278", res.Data.Cursor.Prev, 5,false,"")
+	//log.Println("总人数：",len(cj.LuckyList))
+	//log.Println("中奖列表",cj.LuckyList)
 	// With condition.
-	//luckyListWithCondition := cj.CjManyTimesByFixWorker("135459278", res.Data.Cursor.Prev, 5,true,"拉低")
-	//log.Println("总人数：",len(luckyListWithCondition))
-	//log.Println("中奖列表",luckyListWithCondition)
+	//cj.CjManyTimesByFixWorker("135459278", res.Data.Cursor.Prev, 5,true,"拉低")
+	//log.Println("总人数：",len(cj.LuckyList))
+	//log.Println("中奖列表",cj.LuckyList)
 	//log.Println("如果少于你的规定人数，请更改条件再试试~")
+	cj.CJWithChannelByFixWorker("135459278", res.Data.Cursor.Prev, 5, false, "")
+	log.Println("总人数：", len(cj.LuckyList))
+	log.Println("中奖列表", cj.LuckyList)
 	defer func(Body io.ReadCloser) {
 		err = Body.Close()
 		if err != nil {
