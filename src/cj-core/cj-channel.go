@@ -1,14 +1,14 @@
 package cj_core
 
 import (
-	"log"
 	"math/rand"
 	"strconv"
 	"sync"
 	"time"
 )
 
-var replyChan = make(chan reply, 1)
+var replyChan = make(chan reply)
+var done = make(chan bool)
 
 func CJWithChannelByFixWorker(oid string, rg int, num int, filter bool, condition string) {
 	var wgList sync.WaitGroup = sync.WaitGroup{}
@@ -37,9 +37,12 @@ func CJWithChannelByFixWorker(oid string, rg int, num int, filter bool, conditio
 		// Each goroutine should have a gap.
 		time.Sleep(time.Microsecond * 500)
 	}
-	close(replyChan)
 	wgList.Wait()
-	return
+	close(replyChan)
+	if _, ok := <-done; ok {
+		close(done)
+		return
+	}
 }
 
 func SingleWithChannel(oid string, rg int, filter bool, condition string) {
@@ -61,7 +64,6 @@ func SingleWithChannel(oid string, rg int, filter bool, condition string) {
 					}
 				}
 			}
-			log.Println("运行")
 			replyChan <- luckyPerson
 			break
 		}
@@ -71,8 +73,11 @@ func SingleWithChannel(oid string, rg int, filter bool, condition string) {
 func WriteLuckyListWithChannel() {
 	for {
 		if luckyPerson, ok := <-replyChan; ok {
-			log.Println("person:", luckyPerson)
 			LuckyList = append(LuckyList, luckyPerson)
+		} else {
+			// When the replyChan is closed, notify main goroutine to continue to work.
+			done <- true
+			return
 		}
 	}
 }
