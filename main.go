@@ -30,10 +30,10 @@ func main() {
 	//log.Println("总人数：",len(cj.LuckyList))
 	//log.Println("中奖列表",cj.LuckyList)
 	//log.Println("如果少于你的规定人数，请更改条件再试试~")
-	cj.CJWithChannelByFixWorker("135459278", res.Data.Cursor.Prev, 5, false, "")
-	log.Println("总人数：", len(cj.LuckyList))
-	log.Println("中奖列表", cj.LuckyList)
+	cj.CJWithChannelByFixWorker("135459278", res.Data.Cursor.Prev, 50, false, "")
 	defer func(Body io.ReadCloser) {
+		log.Println("总人数：", len(cj.LuckyList))
+		log.Println("中奖列表", cj.LuckyList)
 		err = Body.Close()
 		if err != nil {
 			log.Println("关闭请求失败", err)
